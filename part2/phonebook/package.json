@@ -36,5 +36,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "proxy": "https://radiant-tor-34800.herokuapp.com"
 }
