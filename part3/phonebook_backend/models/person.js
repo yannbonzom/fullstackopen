@@ -10,8 +10,19 @@ mongoose
 
 // Set up Person schema
 const personSchema = new mongoose.Schema({
-  name: "string",
-  number: "string",
+  name: {
+    type: String,
+    minLength: 3,
+  },
+  number: {
+    type: String,
+    validate: {
+      validator: (n) => {
+        const regex = /^[0-9]{8,}$|^[0-9]{2}-[0-9]{6,}$|^[0-9]{3}-[0-9]{5,}/;
+        return regex.test(n);
+      },
+    },
+  },
 });
 
 // Modify the returned format so that frontend only receives id, name, and number

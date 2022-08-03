@@ -48,10 +48,19 @@ function App() {
         number: newNum,
         id: persons.length + 1,
       };
-      contactHandler.create(personObject).then((returnedPerson) => {
-        setPersons(persons.concat(returnedPerson));
-        addNotifMessage(`Added ${returnedPerson.name}`, false);
-      });
+      contactHandler
+        .create(personObject)
+        .then((returnedPerson) => {
+          setPersons(persons.concat(returnedPerson));
+          addNotifMessage(`Added ${returnedPerson.name}`, false);
+        })
+        .catch((error) => {
+          console.log(error);
+          addNotifMessage(
+            error.response.data.error.message || error.response.data.error,
+            true
+          );
+        });
     }
     setNewName("");
     setNewNum("");

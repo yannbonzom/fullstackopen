@@ -7,7 +7,7 @@ const Person = require("./models/person");
 const app = express();
 app.use(express.static("build"));
 app.use(express.json());
-morgan.token("body", function (req, res) {
+morgan.token("body", (req) => {
   return JSON.stringify(req.body);
 });
 app.use(
@@ -19,15 +19,27 @@ app.get("/api/persons", (request, response) =>
   Person.find({}).then((newPersons) => response.json(newPersons))
 );
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
   if (!body.name || !body.number)
-    return response.status(400).json({ error: "content missing" });
-  const person = new Person({
-    name: body.name,
-    number: body.number,
+    return response.status(400).json({ error: "content missing" }).end();
+  Person.findOne({ name: body.name }).then((res) => {
+    if (res)
+      return response
+        .status(400)
+        .json({ error: "Contact is already in the database" })
+        .end();
+    else {
+      const person = new Person({
+        name: body.name,
+        number: body.number,
+      });
+      person
+        .save()
+        .then((savedPerson) => response.json(savedPerson))
+        .catch((error) => next(error));
+    }
   });
-  person.save().then((savedPerson) => response.json(savedPerson));
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
@@ -59,7 +71,10 @@ app.put("/api/persons/:id", (request, response, next) => {
     name: body.name,
     number: body.number,
   };
-  Person.findByIdAndUpdate(request.params.id, contact, { new: true })
+  Person.findByIdAndUpdate(request.params.id, contact, {
+    new: true,
+    runValidators: true,
+  })
     .then((updatedContact) => response.json(updatedContact))
     .catch((error) => next(error));
 });
@@ -73,7 +88,9 @@ app.use(unknownEndpoint);
 // Error handler middleware
 const errorHandler = (error, request, response, next) => {
   if (error.name === "CastError")
-    return response.status(400).end({ error: "malformed id" });
+    return response.status(400).json({ error: "Malformed id" });
+  else if (error.name === "ValidationError")
+    return response.status(400).json({ error: error });
   next(error);
 };
 app.use(errorHandler);
