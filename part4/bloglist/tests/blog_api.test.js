@@ -7,10 +7,13 @@ const Blog = require("../models/blog");
 const api = supertest(app);
 
 beforeEach(async () => {
+  // await Blog.deleteMany({});
+  // const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
+  // const promiseArray = blogObjects.map((blogObject) => blogObject.save());
+  // await Promise.all(promiseArray);
+
   await Blog.deleteMany({});
-  const blogObjects = helper.initialBlogs.map((blog) => new Blog(blog));
-  const promiseArray = blogObjects.map((blogObject) => blogObject.save());
-  await Promise.all(promiseArray);
+  await Blog.insertMany(helper.initialBlogs);
 });
 
 describe("blog api:", () => {
@@ -54,6 +57,36 @@ describe("blog api:", () => {
       likes: 7,
     };
     await api.post("/api/blogs").send(blog).expect(400);
+  });
+
+  test("deleting blog responds with 204 if id valid", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToDelete = blogsAtStart[0];
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+    const blogsAtEnd = await helper.blogsInDb();
+    expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+
+    const titles = blogsAtEnd.map((blog) => blog.title);
+    expect(titles).not.toContain(blogToDelete.title);
+  });
+
+  test("updating blog changes contents correctly", async () => {
+    const blogsAtStart = await helper.blogsInDb();
+    const blogToUpdate = blogsAtStart[0];
+    const blogUpdated = {
+      id: "5a422a851b54a676234d17f7",
+      title: "React patterns (UPDATED)",
+      author: "Michael Chan",
+      url: "https://reactpatterns.com/",
+      likes: 7,
+    };
+
+    await api.put(`/api/blogs/${blogToUpdate.id}`).send(blogUpdated);
+    const blogsAfterUpdate = await helper.blogsInDb();
+    const titles = blogsAfterUpdate.map((blog) => blog.title);
+    expect(titles).toContain(blogUpdated.title);
   });
 });
 
