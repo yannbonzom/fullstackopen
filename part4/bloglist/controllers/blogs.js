@@ -2,6 +2,7 @@ const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const blog = require("../models/blog");
 
 blogsRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
@@ -10,16 +11,15 @@ blogsRouter.get("/", async (request, response) => {
 
 blogsRouter.post("/", async (request, response) => {
   const body = request.body;
-  const token = getTokenFrom(request);
-  const decodedToken = jwt.decode(token, process.env.SECRET);
-  if (!decodedToken.id)
+  const userToken = request.user;
+  if (!userToken)
     return response
       .status(401)
       .json({ error: "token missing or invalid token" });
   if (!body.title || !body.url)
     return response.status(400).json({ error: "content missing" }).end();
 
-  const user = await User.findById(decodedToken.id);
+  const user = await User.findById(userToken.id);
   const blog = new Blog({
     title: body.title,
     author: body.author,
@@ -35,8 +35,22 @@ blogsRouter.post("/", async (request, response) => {
 });
 
 blogsRouter.delete("/:id", async (request, response) => {
-  await Blog.findByIdAndRemove(request.params.id);
-  response.sendStatus(204).end();
+  const userToken = request.user;
+  if (!userToken)
+    return response
+      .status(401)
+      .json({ error: "token missing or invalid token" });
+  const blogToDelete = await Blog.findById(request.params.id);
+  if (!blogToDelete)
+    return response.status(400).json({ error: "blog already deleted" });
+  if (blogToDelete.user.toString() === userToken.id.toString()) {
+    await blogToDelete.delete();
+    response.sendStatus(204).end();
+  } else {
+    response
+      .status(403)
+      .json({ error: "user is not owner of blog to be deleted" });
+  }
 });
 
 blogsRouter.put("/:id", async (request, response) => {
@@ -53,13 +67,5 @@ blogsRouter.put("/:id", async (request, response) => {
   });
   response.json(updatedBlog);
 });
-
-const getTokenFrom = (request) => {
-  const authorization = request.get("authorization");
-  if (authorization && authorization.toLowerCase().startsWith("bearer ")) {
-    return authorization.substring(7);
-  }
-  return null;
-};
 
 module.exports = blogsRouter;

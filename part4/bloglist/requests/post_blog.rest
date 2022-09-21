@@ -1,9 +1,10 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvc3N2YW5saW5kdCIsImlkIjoiNjMxYTA3YjBmNTY4Nzc0NTgyNDJkZDQ3IiwiaWF0IjoxNjYzNjMwOTI0fQ.-unsh-2efuDiZTuqp16izLi67IS_Tc9xLis3LuJ6N0I
 
 {
   "title": "Web dev",
-  "author": "Yann",
+  "author": "Carl",
   "url": "url1",
   "likes": 3
 }
@@ -11,6 +12,7 @@ Content-Type: application/json
 ###
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvc3N2YW5saW5kdCIsImlkIjoiNjMxYTA3YjBmNTY4Nzc0NTgyNDJkZDQ3IiwiaWF0IjoxNjYzNjMwOTI0fQ.-unsh-2efuDiZTuqp16izLi67IS_Tc9xLis3LuJ6N0I
 
 {
   "title": "App dev",
